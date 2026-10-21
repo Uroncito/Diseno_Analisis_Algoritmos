@@ -39,18 +39,3 @@ if __name__ == "__main__":
     
 #%matplotlib qt
 #Ponerlo en la consola para que al ejecutar lo habra en otra ventana 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
