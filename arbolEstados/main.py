@@ -1,5 +1,7 @@
 import random as rd
-from algoritmo_ordenamiento import ordenar_cartas_carbol
+from algoritmo_ordenamiento import ordenar_cartas_arbol
+from visualizador_png import generar_imagen_arbol
+from graficar_arbol import mostrar_arbol
 
 def guardar_num_ingresados(entrada):
     try:
@@ -21,8 +23,7 @@ def guardar_num_ingresados(entrada):
 
     except ValueError:
         print("No escribas en letras los numeros y separalos con espacios")
-        return[]
-    
+        return[]    
 
 if __name__ == "__main__":
     entrada_usuario = input("Introduce los numeros de un digito: ")
@@ -35,9 +36,15 @@ if __name__ == "__main__":
         
         print(f"Estado inicial: {cartas}")
     
-        pasos = ordenar_cartas_carbol(cartas)
+        pasos, nodo_raiz = ordenar_cartas_arbol(cartas)
     
-        if pasos:    
+        if pasos: 
+            
+            # Generar el diagrama visual del árbol en formato PNG
+            #generar_imagen_arbol(pasos, camino_solucion=pasos, nombre_archivo="arbol_cartas")
+            
+            mostrar_arbol(nodo_raiz, camino_solucion=pasos)
+            
             print(f"\n¡Solución encontrada en {len(pasos) - 1} movimientos!")
             print("Camino más corto:")
             for i, paso in enumerate(pasos):

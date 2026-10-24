@@ -1,7 +1,7 @@
 from arbol import Nodo, generar_hijos, reconstruir_camino
 from collections import deque
 
-def ordenar_cartas_carbol(cartas_iniciales):
+def ordenar_cartas_arbol(cartas_iniciales):
     #Es a donde se quiere llegar
     meta = sorted(cartas_iniciales)
     
@@ -9,7 +9,7 @@ def ordenar_cartas_carbol(cartas_iniciales):
     
     #caso de que ya este ordenada la raiz
     if raiz.datos == meta:
-        return [list(raiz.datos)]
+        return [list(raiz.datos)], raiz
     
     #ocupamos una cola para almacenar por nivel
     cola = deque([raiz])
@@ -31,11 +31,11 @@ def ordenar_cartas_carbol(cartas_iniciales):
                 nodo_actual.hijos.append(hijo)
                 
                 if hijo.datos == meta:
-                    return reconstruir_camino(hijo)
+                    return reconstruir_camino(hijo), raiz
                 
                 cola.append(hijo)
                 
-    return None
+    return None, raiz
 
 
 
