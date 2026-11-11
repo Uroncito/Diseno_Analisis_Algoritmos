@@ -18,7 +18,7 @@ def pintar_lienzo_combinaciones(combinaciones):
         messagebox.showwarning("Aviso", "No hay combinaciones para graficar.")
         return
 
-    fig, ax = plt.subploxts(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(10, 6))
     fig.canvas.manager.set_window_title("Lienzo de Combinaciones")
 
     # Configuración de la cuadrícula visual
