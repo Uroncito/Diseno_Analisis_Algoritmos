@@ -1,4 +1,4 @@
-from collections import deque
+#from collections import deque
 
 class Nodo:
     def __init__(self, datos, padre = None):
