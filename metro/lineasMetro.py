@@ -68,10 +68,10 @@ def posicionesDelMapa(grafo): #el grafo
     return pos
 
 def mostrar_ruta(grafo, ruta):
-    print("\nAbriendo mapa esquemático del Metro CDMX...")
+    print("\nAbriendo mapa del Metro CDMX...")
     
     fig, ax = plt.subplots(figsize=(16, 11))
-    fig.canvas.manager.set_window_title("Mapa Esquemático Metro CDMX - Ruta Dijkstra")
+    fig.canvas.manager.set_window_title("Mapa del Metro CDMX - Dijkstra")
     
     pos = posicionesDelMapa(grafo)
     

@@ -89,7 +89,7 @@ if __name__ == "__main__": #el main
     
     if origen_elegido != "" and destino_elegido != "":
         carpeta_actual = os.path.dirname(os.path.abspath(__file__))
-        ruta_m2 = os.path.join(carpeta_actual, "m2.py")
+        ruta_m2 = os.path.join(carpeta_actual, "dijkstra.py")
         
         respuestas = iter([origen_elegido, destino_elegido])
         input_original = builtins.input
