@@ -45,7 +45,7 @@ def graficar_puntos_dominancia(puntos, min_x=0, max_x=500, min_y=0, max_y=500):
     # Configuración de límites y títulos
     plt.xlim(min_x, max_x)
     plt.ylim(min_y, max_y)
-    plt.title("Algoritmo de Dominancia y Rango (Divide y Vencerás)", fontsize=12)
+    plt.title("Algoritmo de Dominancia y Rango", fontsize=12)
     plt.xlabel("Coordenada X")
     plt.ylabel("Coordenada Y")
     plt.grid(True, linestyle=':', alpha=0.6)
