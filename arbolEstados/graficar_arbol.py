@@ -2,126 +2,159 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from arbol import Nodo
 
-def calcular_posiciones_por_niveles(nodo_raiz):
+def _obtener_ancho_subarbol(nodo):
+    """Calcula cuántas hojas tiene la rama de este nodo para reservar su espacio horizontal."""
+    hijos = nodo.hijos if isinstance(nodo, Nodo) else []
+    if not hijos:
+        return 1
+    return sum(_obtener_ancho_subarbol(hijo) for hijo in hijos)
+
+def _asignar_coordenadas_arbol(nodo, nivel=0, x_inicio=0.0, pos=None, info_nodos=None):
     """
-    Asigna coordenadas (x, y) a cada nodo para que el árbol se dibuje 
-    estrictamente ordenado por niveles (Top-Down).
+    Posiciona cada nodo exactamente centrado encima de sus hijos (estilo árbol binario/n-ario).
     """
-    pos = {}
-    niveles = {}  # Guarda los nodos agrupados por profundidad: {0: [raiz], 1: [hijo1, hijo2], ...}
-    
-    # Cola para recorrido por anchura (BFS) guardando (nodo, nivel_actual)
-    cola = [(nodo_raiz, 0)]
-    visitados = set()
+    if pos is None:
+        pos = {}
+    if info_nodos is None:
+        info_nodos = {}
 
-    while cola:
-        nodo_actual, nivel = cola.pop(0)
-        id_actual = id(nodo_actual)
+    id_nodo = id(nodo)
+    info_nodos[id_nodo] = nodo
+    hijos = nodo.hijos if isinstance(nodo, Nodo) else []
 
-        if id_actual in visitados:
-            continue
-        visitados.add(id_actual)
+    if not hijos:
+        # Si es hoja, ocupa 1 unidad de ancho
+        pos[id_nodo] = (x_inicio + 0.5, -nivel)
+        return x_inicio + 1.0, pos, info_nodos
 
-        if nivel not in niveles:
-            niveles[nivel] = []
-        niveles[nivel].append(nodo_actual)
+    # Si tiene hijos, posicionamos cada subárbol de izquierda a derecha
+    x_actual = x_inicio
+    centros_hijos = []
+    for hijo in hijos:
+        x_actual, pos, info_nodos = _asignar_coordenadas_arbol(
+            hijo, nivel + 1, x_actual, pos, info_nodos
+        )
+        centros_hijos.append(pos[id(hijo)][0])
 
-        # Recorrer hijos en el siguiente nivel
-        hijos = nodo_actual.hijos if isinstance(nodo_actual, Nodo) else []
-        for hijo in hijos:
-            cola.append((hijo, nivel + 1))
+    # El padre se coloca exactamente en el punto medio entre su primer y último hijo
+    x_padre = (centros_hijos[0] + centros_hijos[-1]) / 2.0
+    pos[id_nodo] = (x_padre, -nivel)
 
-    # Asignar coordenadas (x, y) en el plano cartesiano
-    # y = -nivel (para que el nivel 0 quede arriba y los demás bajen)
-    # x = centrado horizontalmente para cada grupo de nodos del mismo nivel
-    for nivel, nodos_del_nivel in niveles.items():
-        total_nodos = len(nodos_del_nivel)
-        for i, nodo in enumerate(nodos_del_nivel):
-            id_nodo = id(nodo)
-            # Calcular x para distribuir los nodos de forma simétrica
-            if total_nodos == 1:
-                x = 0.5
-            else:
-                x = i / (total_nodos - 1)
-            
-            y = -nivel  # Profundidad hacia abajo
-            pos[id_nodo] = (x, y)
-
-    return pos
+    return x_actual, pos, info_nodos
 
 
 def mostrar_arbol(nodo_raiz, camino_solucion=None):
     """
-    Dibuja el árbol de estados organizado formalmente por NIVELES en Spyder.
+    Dibuja el árbol de estados con estructura jerárquica limpia y escala dinámica
+    para soportar desde pocas hasta muchas cartas sin apachurrarse.
     """
     if nodo_raiz is None:
         print("No hay nodo raíz para graficar.")
         return
 
+    # 1. Calcular posiciones jerárquicas tipo árbol
+    ancho_total, posiciones, info_nodos = _asignar_coordenadas_arbol(nodo_raiz)
+    total_nodos = len(info_nodos)
+    profundidad_max = max(abs(y) for _, y in posiciones.values())
+    num_cartas = len(nodo_raiz.datos) if isinstance(nodo_raiz, Nodo) else len(nodo_raiz)
+
+    # Aviso preventivo si con 10 cartas se generó un árbol gigantesco
+    if total_nodos > 400:
+        print(f"Aviso: El árbol tiene {total_nodos} nodos. La ventana será muy ancha; usa la lupa para hacer zoom.")
+
+    # 2. Construir el grafo dirigido
     G = nx.DiGraph()
     labels = {}
-    colores = []
 
-    # Preparar el conjunto de combinaciones que forman el camino más corto
+    for id_nodo, nodo in info_nodos.items():
+        datos = nodo.datos if isinstance(nodo, Nodo) else nodo
+        # Si son muchas cartas (ej. 10), formato compacto sin espacios para ahorrar ancho
+        if num_cartas >= 7:
+            labels[id_nodo] = "[" + ",".join(map(str, datos)) + "]"
+        else:
+            labels[id_nodo] = str(list(datos))
+
+        G.add_node(id_nodo)
+        hijos = nodo.hijos if isinstance(nodo, Nodo) else []
+        for hijo in hijos:
+            G.add_edge(id_nodo, id(hijo))
+
+    # 3. Escalar dinámicamente el lienzo y la letra según cantidad de nodos y cartas
+    factor_ancho = max(1.1, num_cartas * 0.28)
+    fig_ancho = min(60, max(12, ancho_total * factor_ancho))
+    fig_alto = min(35, max(7, (profundidad_max + 1) * 1.8))
+
+    if total_nodos > 120 or num_cartas >= 8:
+        tam_fuente = 6
+    elif total_nodos > 40 or num_cartas >= 6:
+        tam_fuente = 7
+    else:
+        tam_fuente = 9
+
+    fig, ax = plt.subplots(figsize=(fig_ancho, fig_alto))
+    fig.canvas.manager.set_window_title("Árbol de Espacio de Estados")
+
+    # 4. Dibujar primero las flechas (aristas)
+    nx.draw_networkx_edges(
+        G, posiciones, ax=ax,
+        edge_color='#7f8c8d', arrows=True, arrowsize=12,
+        width=1.2, node_size=800
+    )
+
+    # 5. Dibujar cada nodo como una caja rectangular adaptable al texto
     conjunto_camino = set()
     if camino_solucion:
         conjunto_camino = {
-            tuple(estado) if isinstance(estado, (list, tuple)) else estado 
+            tuple(estado) if isinstance(estado, (list, tuple)) else estado
             for estado in camino_solucion
         }
 
-    # Recorrer el árbol para armar la estructura del grafo
-    cola = [nodo_raiz]
-    visitados = set()
+    for id_nodo, (x, y) in posiciones.items():
+        nodo = info_nodos[id_nodo]
+        datos = nodo.datos if isinstance(nodo, Nodo) else nodo
+        es_raiz = (id_nodo == id(nodo_raiz))
+        es_solucion = tuple(datos) in conjunto_camino
 
-    while cola:
-        nodo_actual = cola.pop(0)
-        id_actual = id(nodo_actual)
-
-        if id_actual in visitados:
-            continue
-        visitados.add(id_actual)
-
-        # Extraer datos e hijos manejando tipo Nodo
-        if isinstance(nodo_actual, Nodo):
-            datos_nodo = nodo_actual.datos
-            hijos_nodo = nodo_actual.hijos
+        # Colores diferenciados: Dorado para la raíz, Verde para el camino más corto, Azul para el resto
+        if es_raiz:
+            color_fondo = '#ffe082'  # Amarillo suave (Raíz)
+            color_borde = '#f57f17'
+        elif es_solucion:
+            color_fondo = '#a5d6a7'  # Verde claro (Ruta óptima)
+            color_borde = '#2e7d32'
         else:
-            datos_nodo = nodo_actual
-            hijos_nodo = []
+            color_fondo = '#b3e5fc'  # Azul claro (Explorados)
+            color_borde = '#0277bd'
 
-        labels[id_actual] = str(list(datos_nodo))
+        ax.text(
+            x, y, labels[id_nodo],
+            ha='center', va='center',
+            fontsize=tam_fuente, fontweight='bold', color='#1a1a1a',
+            bbox=dict(
+                boxstyle='round,pad=0.35',
+                facecolor=color_fondo,
+                edgecolor=color_borde,
+                linewidth=1.5
+            ),
+            zorder=3
+        )
 
-        for hijo in hijos_nodo:
-            id_hijo = id(hijo)
-            G.add_edge(id_actual, id_hijo)
-            cola.append(hijo)
+    # 6. Etiquetas laterales indicando Nivel 0, Nivel 1, Nivel 2...
+    x_min = min(x for x, _ in posiciones.values()) - 0.8
+    x_max = max(x for x, _ in posiciones.values()) + 0.8
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(-profundidad_max - 0.7, 0.7)
 
-    # Resaltar en verde claro la solución óptima y en azul los demás
-    for node_id in G.nodes():
-        es_solucion = False
-        for nodo_v in visitados:
-            if id(nodo_v) == node_id:
-                datos = nodo_v.datos if isinstance(nodo_v, Nodo) else nodo_v
-                if tuple(datos) in conjunto_camino:
-                    es_solucion = True
-                    break
+    for nivel in range(profundidad_max + 1):
+        ax.text(
+            x_min + 0.1, -nivel, f"Nivel {nivel}",
+            fontsize=tam_fuente, color='#555555', style='italic', va='center'
+        )
 
-        if es_solucion:
-            colores.append('lightgreen')
-        else:
-            colores.append('skyblue')
-
-    # Calcular posiciones ordenadas por jerarquía vertical (Nivel 0, Nivel 1, Nivel 2...)
-    posiciones = calcular_posiciones_por_niveles(nodo_raiz)
-
-    # Dibujar la figura
-    plt.figure(figsize=(12, 8))
-    nx.draw(
-        G, posiciones, labels=labels, with_labels=True, 
-        node_size=2500, node_color=colores, font_size=8, 
-        font_weight='bold', edge_color='gray', arrowsize=15
+    ax.set_title(
+        f"Árbol de Espacio de Estados ({total_nodos} nodos | {profundidad_max} niveles)",
+        fontsize=12, fontweight='bold', pad=15
     )
-
-    plt.title("Árbol de Espacio de Estados Organizado por Niveles", fontsize=12)
-    plt.show()
+    ax.axis('off')
+    plt.tight_layout()
+    plt.show(block=True)
