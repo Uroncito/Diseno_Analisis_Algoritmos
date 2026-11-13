@@ -1,20 +1,22 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('TkAgg')
 
 colores_lineas = {
-    'L1': '#F04E98',  # Rosa
-    'L2': '#005EB8',  # Azul
-    'L3': '#AF9800',  # Verde olivo
-    'L4': '#6BBBAE',  # Cian
-    'L5': '#FFD100',  # Amarillo
-    'L6': '#DA291C',  # Rojo
-    'L7': '#E87722',  # Naranja
-    'L8': '#009A44',  # Verde bandera
-    'L9': '#512D1D',  # Café
-    'LA': '#9B26B6',  # Morado
-    'LB': '#B1B3B3',  # Verde/Gris
-    'L12': '#B09A5B'  # Oro
-}#Color de cada linea
+    'L1': '#F04E98',  #Rosa
+    'L2': '#005EB8',  #Azul
+    'L3': '#AF9800',  #Verde olivo
+    'L4': '#6BBBAE',  #Cian
+    'L5': '#FFD100',  #Amarillo
+    'L6': '#DA291C',  #Rojo
+    'L7': '#E87722',  #Naranja
+    'L8': '#009A44',  #Verde bandera
+    'L9': '#512D1D',  #Cafe
+    'LA': '#9B26B6',  #Morado
+    'LB': '#B1B3B3',  #Verde/Gris
+    'L12': '#B09A5B'  #Oro
+}
 
 anclas = {
     'EL ROSARIO': (-7.5, 8.5), 'INSTITUTO DEL PETROLEO': (-3.0, 7.5), 'MARTIN CARRERA': (0.5, 7.0),
@@ -33,7 +35,7 @@ anclas = {
     'CANDELARIA': (-0.5, 1.5) #Forma de las lineas del metro
 }
 
-def posicionesDelMapa(grafo):
+def posicionesDelMapa(grafo): #el grafo
     pos = {}
     for linea in colores_lineas.keys():
         nodos_linea = [n for n in grafo.nodes() if n.endswith(f" {linea}")]

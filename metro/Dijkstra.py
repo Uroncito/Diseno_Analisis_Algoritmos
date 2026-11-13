@@ -1,5 +1,5 @@
 import networkx as nx
-import ventana
+import ventana2
 
 #Lineas del metro
 lineas_metro = {
@@ -63,7 +63,7 @@ try:
         i += 1
         
     #Llama a la ventana
-    ventana.mostrar_ruta(LineaM, ruta)
+    ventana2.mostrar_ruta(LineaM, ruta)
         
 except nx.NodeNotFound:
     print("\nEscribiste mal la estación, SONSO, hazlo de otra vez.")
